@@ -1,7 +1,7 @@
 #!/bin/bash
 #========================================================================================================================
 # https://github.com/ophub/amlogic-s9xxx-openwrt
-# Description: Automatically Build OpenWrt for Amlogic s9xxx tv box
+# Description: Automatically Build OpenWrt for Amlogic s9xxx STB
 # Function: Diy script (After Update feeds, Modify the default IP, hostname, theme, add/remove software packages, etc.)
 # Source code repository: https://github.com/coolsnowwolf/lede / Branch: master
 #========================================================================================================================
@@ -13,10 +13,6 @@ sed -i 's/luci-theme-bootstrap/luci-theme-material/g' ./feeds/luci/collections/l
 
 # Add autocore support for armvirt
 sed -i 's/TARGET_rockchip/TARGET_rockchip\|\|TARGET_armvirt/g' package/lean/autocore/Makefile
-
-# Add luci-app-openclash
-svn co https://github.com/vernesong/OpenClash/trunk/luci-app-openclash package/openwrt-openclash
-pushd package/openwrt-openclash/tools/po2lmo && make && sudo make install 2>/dev/null && popd
 
 # Set etc/openwrt_release
 sed -i "s|DISTRIB_REVISION='.*'|DISTRIB_REVISION='R$(date +%Y.%m.%d)'|g" package/lean/default-settings/files/zzz-default-settings
@@ -40,10 +36,6 @@ svn co https://github.com/ophub/luci-app-amlogic/trunk/luci-app-amlogic package/
 
 # Add p7zip
 svn co https://github.com/hubutui/p7zip-lede/trunk package/p7zip
-
-# Fix runc version error
-# rm -rf ./feeds/packages/utils/runc/Makefile
-# svn export https://github.com/openwrt/packages/trunk/utils/runc/Makefile ./feeds/packages/utils/runc/Makefile
 
 # coolsnowwolf default software package replaced with Lienol related software package
 # rm -rf feeds/packages/utils/{containerd,libnetwork,runc,tini}
