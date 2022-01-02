@@ -5,7 +5,7 @@
 # Source code repository: https://github.com/coolsnowwolf/lede / Branch: master
 #========================================================================================================================
 
-name: Build OpenWrt lede / cahya443
+name: Build OpenWrt lede
 
 on:
   repository_dispatch:
@@ -181,7 +181,7 @@ jobs:
           * Firmware information
           Default IP: 192.168.1.1
           Default username: root
-          Default password: 301191
+          Default password: password
           Default WIFI name: CAHYA-STB
           Default WIFI password: none
           Install to EMMC: Login to OpenWrt → System → Amlogic Service → Install OpenWrt
