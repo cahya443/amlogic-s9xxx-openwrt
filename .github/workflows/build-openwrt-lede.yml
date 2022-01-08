@@ -1,6 +1,6 @@
 #========================================================================================================================
 # https://github.com/ophub/amlogic-s9xxx-openwrt
-# Description: Automatically Build OpenWrt for Amlogic s9xxx STB
+# Description: Automatically Build OpenWrt for Amlogic s9xxx tv box
 # Cron: min (0 - 59) / hour (0 - 23) / day of month (1 - 31) / month (1 - 12) / day of week (0 - 6)(Sunday - Saturday)
 # Source code repository: https://github.com/coolsnowwolf/lede / Branch: master
 #========================================================================================================================
@@ -20,15 +20,6 @@ env:
   CONFIG_FILE: router-config/lede-master/.config
   DIY_P1_SH: router-config/lede-master/diy-part1.sh
   DIY_P2_SH: router-config/lede-master/diy-part2.sh
-  UPLOAD_BIN_DIR: false
-  UPLOAD_ARMVIRT: false
-  UPLOAD_FIRMWARE: false
-  UPLOAD_RELEASE: true
-  UPLOAD_COWTRANSFER: false
-  UPLOAD_WETRANSFER: false
-  DELETE_RELEASE: true
-  DELETE_ARTIFACTS: true
-  RECENT_LASTEST: 3
   TZ: Asia/Shanghai
 
 jobs:
@@ -55,97 +46,7 @@ jobs:
         echo "COMPILE_STARTINGTIME=$(date +"%Y.%m.%d.%H%M")" >> $GITHUB_ENV
 
     - name: Clone source code
-      working-directory: /workdir#!/bin/bash
-
-#========================================================================================================================
-
-# https://github.com/ophub/amlogic-s9xxx-openwrt
-
-# Description: Automatically Build OpenWrt for Amlogic s9xxx tv box
-
-# Function: Diy script (After Update feeds, Modify the default IP, hostname, theme, add/remove software packages, etc.)
-
-# Source code repository: https://github.com/coolsnowwolf/lede / Branch: master
-
-#========================================================================================================================
-
-# ------------------------------- Main source started -------------------------------
-
-#
-
-# Modify default theme（FROM uci-theme-bootstrap CHANGE TO luci-theme-material）
-
-sed -i 's/luci-theme-bootstrap/luci-theme-material/g' ./feeds/luci/collections/luci/Makefile
-
-# Add autocore support for armvirt
-
-sed -i 's/TARGET_rockchip/TARGET_rockchip\|\|TARGET_armvirt/g' package/lean/autocore/Makefile
-
-# Set etc/openwrt_release
-
-sed -i "s|DISTRIB_REVISION='.*'|DISTRIB_REVISION='R$(date +%Y.%m.%d)'|g" package/lean/default-settings/files/zzz-default-settings
-
-echo "DISTRIB_SOURCECODE='lede'" >>package/base-files/files/etc/openwrt_release
-
-# Modify default IP（FROM 192.168.1.1 CHANGE TO 192.168.31.4）
-
-# sed -i 's/192.168.1.1/192.168.31.4/g' package/base-files/files/bin/config_generate
-
-# Modify default root's password（FROM 'password'[$1$V4UetPzk$CYXluq4wUazHjmCDBCqXF.] CHANGE TO 'your password'）
-
-# sed -i 's/root::0:0:99999:7:::/root:$1$V4UetPzk$CYXluq4wUazHjmCDBCqXF.:0:0:99999:7:::/g' /etc/shadow
-
-# Replace the default software source
-
-# sed -i 's#openwrt.proxy.ustclug.org#mirrors.bfsu.edu.cn\\/openwrt#' package/lean/default-settings/files/zzz-default-settings
-
-#
-
-# ------------------------------- Main source ends -------------------------------
-
-# ------------------------------- Other started -------------------------------
-
-#
-
-# Add luci-app-amlogic
-
-svn co https://github.com/ophub/luci-app-amlogic/trunk/luci-app-amlogic package/luci-app-amlogic
-
-# Add p7zip
-
-svn co https://github.com/hubutui/p7zip-lede/trunk package/p7zip
-
-# Fix runc version error
-
-# rm -rf ./feeds/packages/utils/runc/Makefile
-
-# svn export https://github.com/openwrt/packages/trunk/utils/runc/Makefile ./feeds/packages/utils/runc/Makefile
-
-# coolsnowwolf default software package replaced with Lienol related software package
-
-# rm -rf feeds/packages/utils/{containerd,libnetwork,runc,tini}
-
-# svn co https://github.com/Lienol/openwrt-packages/trunk/utils/{containerd,libnetwork,runc,tini} feeds/packages/utils
-
-# Add third-party software packages (The entire repository)
-
-# git clone https://github.com/libremesh/lime-packages.git package/lime-packages
-
-# Add third-party software packages (Specify the package)
-
-# svn co https://github.com/libremesh/lime-packages/trunk/packages/{shared-state-pirania,pirania-app,pirania} package/lime-packages/packages
-
-# Add to compile options (Add related dependencies according to the requirements of the third-party software package Makefile)
-
-# sed -i "/DEFAULT_PACKAGES/ s/$/ pirania-app pirania ip6tables-mod-nat ipset shared-state-pirania uhttpd-mod-lua/" target/linux/armvirt/Makefile
-
-# Apply patch
-
-# git apply ../router-config/patches/{0001*,0002*}.patch --directory=feeds/luci
-
-#
-
-# ------------------------------- Other ends -------------------------------
+      working-directory: /workdir
       run: |
         df -hT $PWD
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
@@ -192,37 +93,6 @@ svn co https://github.com/hubutui/p7zip-lede/trunk package/p7zip
         echo "FILE_DATE=$(date +"%Y.%m.%d.%H%M")" >> $GITHUB_ENV
         echo "::set-output name=status::success"
 
-    - name: Check space usage
-      if: (!cancelled())
-      run: df -hT
-
-    - name: Upload OpenWrt bin directory to Actions
-      uses: actions/upload-artifact@v2
-      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
-      with:
-        name: openwrt_bin_armvirt_64_${{ env.FILE_DATE }}
-        path: openwrt/bin
-        retention-days: ${{ env.RECENT_LASTEST }}
-        if-no-files-found: ignore
-
-    - name: Organize armvirt files
-      id: organize
-      if: steps.compile.outputs.status == 'success' && !cancelled()
-      run: |
-        cd openwrt/bin/targets/*/*
-        rm -rf packages
-        echo "TMPFILEPATH=$PWD" >> $GITHUB_ENV
-        echo "::set-output name=status::success"
-
-    - name: Upload armvirt directory to Actions
-      uses: actions/upload-artifact@v2
-      if: steps.organize.outputs.status == 'success' && env.UPLOAD_ARMVIRT == 'true' && !cancelled()
-      with:
-        name: openwrt_armvirt_64_${{ env.FILE_DATE }}
-        path: ${{ env.TMPFILEPATH }}
-        retention-days: ${{ env.RECENT_LASTEST }}
-        if-no-files-found: ignore
-
     - name: Build OpenWrt firmware
       if: steps.compile.outputs.status == 'success' && !cancelled()
       id: build
@@ -230,7 +100,8 @@ svn co https://github.com/hubutui/p7zip-lede/trunk package/p7zip
         [ -d openwrt-armvirt ] || mkdir -p openwrt-armvirt
         cp -f openwrt/bin/targets/*/*/*.tar.gz openwrt-armvirt/ && sync
         sudo chmod +x make
-        sudo ./make -d -b s905x3_s905x2_s905x_s905w_s905d_s922x_s912 -k 5.10.80_5.4.160
+        sudo ./make -d -b s922x_s905x3_s905d -k 5.15.13_5.10.90_5.4.170
+        sudo ./make -d -b s922x-n2_s905x2_s905_s905d-ki_s912_s912-t95z_s905x_s905w -k 5.4.170
         [ -d ipk ] || mkdir -p ipk
         cp -rf $(find openwrt/bin/packages/ -type f -name "*.ipk") ipk/ && sync
         sudo tar -czf ipk.tar.gz ipk && mv -f ipk.tar.gz out/ && sync
@@ -238,41 +109,21 @@ svn co https://github.com/hubutui/p7zip-lede/trunk package/p7zip
         echo "PACKAGED_OUTPUTDATE=$(date +"%Y.%m.%d.%H%M")" >> $GITHUB_ENV
         echo "::set-output name=status::success"
 
-    - name: Upload artifact to Actions
-      uses: kittaakos/upload-artifact-as-is@master
-      if: steps.build.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true' && !cancelled()
-      with:
-        path: ${{ env.PACKAGED_OUTPUTPATH }}/
-
-    - name: Upload OpenWrt Firmware to cowtransfer
-      if: steps.build.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
-      run: |
-        curl -fsSL git.io/file-transfer | sh
-        ./transfer cow --block 2621440 -s -p 64 --no-progress ${{ env.PACKAGED_OUTPUTPATH }}/{openwrt_s9xxx_*,openwrt_n1_*} 2>&1 | tee cowtransfer.log
-        echo "COW_URL=$(cat cowtransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_ENV
-
-    - name: Upload OpenWrt Firmware to WeTransfer
-      if: steps.build.outputs.status == 'success' && env.UPLOAD_WETRANSFER == 'true' && !cancelled()
-      run: |
-        curl -fsSL git.io/file-transfer | sh
-        ./transfer wet -s -p 16 --no-progress ${{ env.PACKAGED_OUTPUTPATH }}/{openwrt_s9xxx_*,openwrt_n1_*} 2>&1 | tee wetransfer.log
-        echo "WET_URL=$(cat wetransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_ENV
-
     - name: Upload OpenWrt Firmware to Release
       uses: ncipollo/release-action@v1
-      if: steps.build.outputs.status == 'success' && env.UPLOAD_RELEASE == 'true' && !cancelled()
+      if: steps.build.outputs.status == 'success' && !cancelled()
       with:
         tag: openwrt_s9xxx_lede_${{ env.PACKAGED_OUTPUTDATE }}
         artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
         allowUpdates: true
         token: ${{ secrets.GITHUB_TOKEN }}
         body: |
-          This is OpenWrt firmware for Amlogic s9xxx STB
+          This is OpenWrt firmware for Amlogic s9xxx tv box
           * Firmware information
           Default IP: 192.168.1.1
           Default username: root
           Default password: password
-          Default WIFI name: CAHYA-STB
+          Default WIFI name: OpenWrt
           Default WIFI password: none
           Install to EMMC: Login to OpenWrt → System → Amlogic Service → Install OpenWrt
 
