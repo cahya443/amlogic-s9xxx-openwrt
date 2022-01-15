@@ -52,7 +52,7 @@ The method of Use GitHub Actions to compile OpenWrt, as well as many contents in
     - [10.7 Manage packages using web interface](#107-manage-packages-using-web-interface)
     - [10.8 How to recover if the install fails and cannot be started](#108-how-to-recover-if-the-install-fails-and-cannot-be-started)
     - [10.9 If you can’t startup after using the Mainline u-boot](#109-if-you-cant-startup-after-using-the-mainline-u-boot)
-    - [10.10 Turn on the USB disk boot mode of the Amlogic s9xxx tv box](#1010-turn-on-the-usb-disk-boot-mode-of-the-amlogic-s9xxx-tv-box)
+    - [10.10 Set the box to boot from USB/TF/SD](#1010-set-the-box-to-boot-from-usbtfsd)
 
 ## 1. Register your own GitHub account
 
@@ -253,7 +253,7 @@ Download our compiled openwrt firmware.
 
 ### 7.1 Download from GitHub Actions
 
-Click the `Actions` button in the `repository navigation bar`. In the `All workflows` list, click the compiled firmware list. In the firmware list inside, select the firmware corresponding to the model of your `Amlogic s9xxx tv box`. The icons are as follows: 
+Click the `Actions` button in the `repository navigation bar`. In the `All workflows` list, click the compiled firmware list. In the firmware list inside, select the firmware corresponding to the model of your `Amlogic s9xxx tv box`. The icons are as follows:
 
 <div style="width:100%;margin-top:40px;margin:5px;">
 <img src=https://user-images.githubusercontent.com/68696949/109418782-08714c00-7a05-11eb-9556-91575640a4bb.jpg width="300" />
@@ -315,7 +315,7 @@ For more OpenWrt firmware .dtb files are in the [amlogic-dtb](https://github.com
 
 ### 9.1 Update using the operation panel
 
-`Log in to your OpenWrt system`, under the `System` menu, select the `Amlogic Service`, select the `Update OpenWrt` to update. (You can update from a higher version such as 5.10.80 to a lower version such as 5.4.160, or from a lower version such as 5.4.160 to a higher version such as 5.10.80. The kernel version number does not affect the update, and `you can freely update/downgrade`.)
+`Log in to your OpenWrt system`, under the `System` menu, select the `Amlogic Service`, select the `Update OpenWrt` to update. (You can update from a higher version such as 5.10.90 to a lower version such as 5.4.170, or from a lower version such as 5.4.170 to a higher version such as 5.10.90. The kernel version number does not affect the update, and `you can freely update/downgrade`.)
 
 ### 9.2 Update using script commands
 
@@ -325,8 +325,8 @@ For more OpenWrt firmware .dtb files are in the [amlogic-dtb](https://github.com
 openwrt-update-amlogic
 ```
 💡Tips: You can also put the `update file` in the `/mnt/mmcblk*p4/` directory, the `openwrt-update-amlogic` script will automatically find the `update file` from the `/mnt/mmcblk*p4/` directories.
-    
-If there is only one `update file` in the ***`/mnt/mmcblk*p4/`*** directory, you can just enter the ***`openwrt-update-amlogic`*** command without specifying a specific `update file`. The `openwrt-update-amlogic` script will vaguely look for `update file` from this directory and try to update. If there are multiple `update file` in the `/mnt/mmcblk*p4/` directory, please use the ***`openwrt-update-amlogic openwrt_s905x3_v5.4.160_2021.03.17.0412.img.gz`*** command to specify the `update file`.
+
+If there is only one `update file` in the ***`/mnt/mmcblk*p4/`*** directory, you can just enter the ***`openwrt-update-amlogic`*** command without specifying a specific `update file`. The `openwrt-update-amlogic` script will vaguely look for `update file` from this directory and try to update. If there are multiple `update file` in the `/mnt/mmcblk*p4/` directory, please use the ***`openwrt-update-amlogic openwrt_s905x3_v5.4.170_2021.03.17.0412.img.gz`*** command to specify the `update file`.
 
 - The `openwrt-update-amlogic` update file search order
 
@@ -392,14 +392,14 @@ Near line 153, find `Build OpenWrt firmware`, Code snippet like this:
         sudo rm -rf openwrt && sync
         sudo rm -rf /workdir && sync
         sudo chmod +x make
-        sudo ./make -d -b s905x3_s905x2_s905x_s905d_s922x_s912 -k 5.10.80_5.4.160
+        sudo ./make -d -b s905x3_s905x2_s905x_s905d_s922x_s912 -k 5.10.90_5.4.170
         cd out/ && sudo gzip *.img
         cp -f ../openwrt-armvirt/*.tar.gz . && sync
         echo "FILEPATH=$PWD" >> $GITHUB_ENV
         echo "::set-output name=status::success"
 ```
 Modify the -d parameter to the model of your box, and modify the value after the -k parameter to the version number of the kernel you want to compile:
-`sudo ./make -d -b s905x -k 5.4.160`. Optional parameters and usage method see: [Detailed make compile command](https://github.com/ophub/amlogic-s9xxx-openwrt#detailed-make-compile-command)
+`sudo ./make -d -b s905x -k 5.4.170`. Optional parameters and usage method see: [Detailed make compile command](https://github.com/ophub/amlogic-s9xxx-openwrt#detailed-make-compile-command)
 
 ### 10.3 Custom banner information
 
@@ -457,14 +457,14 @@ For such usage of OpenWrt firmware, **`it's warmly recommended to use the Image 
 
 Common commands:
 ```
-opkg update                                   #Update list of available packages  
-opkg upgrade <pkgs>                           #Upgrade packages  
+opkg update                                   #Update list of available packages
+opkg upgrade <pkgs>                           #Upgrade packages
 opkg install <pkgs>                           #Install package(s)
 opkg install --force-reinstall <pkgs>         #Force reinstall package(s)
-opkg configure <pkgs>                         #Configure unpacked package(s)  
+opkg configure <pkgs>                         #Configure unpacked package(s)
 opkg remove <pkgs | regexp>                   #Remove package(s)
-opkg list                                     #List available packages  
-opkg list-installed                           #List installed packages  
+opkg list                                     #List available packages
+opkg list-installed                           #List installed packages
 opkg list-upgradable                          #List installed and upgradable packages
 opkg list | grep <pkgs>                       #Find similar packages names
 ```
@@ -525,7 +525,7 @@ After restoring the factory settings, the operation method is the same as when y
 
 ### 10.9 If you can’t startup after using the Mainline u-boot
 
-- Some Amlogic S905x3 box sometimes fail to boot after use the `mainline u-boot`. The fault phenomenon is usually the `=>` prompt of u-boot automatically. The reason is that TTL lacks a pull-up resistor or pull-down resistor and is easily interfered by surrounding electromagnetic signals. The solution is to solder a 5K-10K resistor (pull-down) between TTL RX and GND, or solder a resistor between RX and 3.3V. A resistance of 5K-10K (pull-up).
+- A very small number of devices may fail to boot after choosing to write to the main line `u-boot`. The fault phenomenon is usually the `=>` prompt of u-boot automatically. The reason is that TTL lacks a pull-up resistor or pull-down resistor and is easily interfered by surrounding electromagnetic signals. The solution is to solder a 5K-10K resistor (pull-down) between TTL RX and GND, or solder a resistor between RX and 3.3V. A resistance of 5K-10K (pull-up).
 
 If you choose to use the `mainline u-boot` during installation and it fails to start, please connect the Amlogic S905x3 box to the monitor. If the screen shows the following prompt:
 ```
@@ -548,10 +548,12 @@ You need to install a resistor on the TTL: [X96 Max Plus's V4.0 Motherboard](htt
 #######################################################            #####################################################
 ```
 
-### 10.10 Turn on the USB disk boot mode of the Amlogic s9xxx tv box
+### 10.10 Set the box to boot from USB/TF/SD
 
-- Open the developer mode: Settings → About this machine → Version number (for example: X96max plus...), click on the version number for 7 times in quick succession, and you will see that the developer mode is turned on.
-- Turn on USB debugging: After restarting, enter Settings → System → Advanced options → Developer options again (after entering, confirm that the status is on, and the USB debugging status in the list is also on)
-- Boot from USB hard disk: Unplug the power → insert the USB hard disk → insert the thimble into the AV port (top reset button) → insert the power → release the thimble of the av port → the system will boot from the USB hard disk.
+- Write the firmware to USB/TF/SD, insert it into the box after writing.
+- Open the developer mode: Settings → About this machine → Version number (for example: X96max plus...), click on the version number for 5 times in quick succession, See the prompt of `Enable Developer Mode` displayed by the system.
+- Turn on USB debugging: System → Advanced options → Developer options again (after entering, confirm that the status is on, and the `USB debugging` status in the list is also on). Enable `ADB` debugging.
+- Install ADB tools: Download [adb](https://github.com/ophub/script/releases/download/dev/adb.tar.gz) and unzip it, copy the three files `adb.exe`, `AdbWinApi.dll`, and `AdbWinUsbApi.dll` to the two files `system32` and `syswow64` under the directory of `c://windows/` Folder, then open the `cmd` command panel, use `adb --version` command, if it is displayed, it is ready to use.
+- Enter the `cmd` command mode. Enter the `adb connect 192.168.1.137` command (the ip is modified according to your box, and you can check it in the router device connected to the box), If the link is successful, it will display `connected to 192.168.1.137:5555`
+- Enter the `adb shell reboot update` command, the box will restart and boot from the USB/TF/SD you inserted, access the firmware IP address from a browser, or SSH to enter the firmware.
 - Log in to the system: Connect the computer and the s9xxx box with a network interface → turn off the wireless wifi on the computer → enable the wired connection → manually set the computer ip to the same network segment ip as openwrt, ipaddr such as `192.168.1.2`. The netmask is `255.255.255.0`, and others are not filled in. You can log in to the openwrt system from the browser, Enter OpwnWrt's IP Address: `192.168.1.1`, Account: `root`, Password: `password`, and then log in OpenWrt system.
-
